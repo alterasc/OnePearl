@@ -1,0 +1,146 @@
+﻿using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.Items.Equipment;
+using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Items;
+using Kingmaker.PubSubSystem;
+using Kingmaker.UnitLogic.Abilities.Components;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace OnePearl;
+internal static class PearlUtils
+{
+    /// <summary>
+    /// Collects all pearls in the inventory
+    /// </summary>
+    /// <param name="inventory">inventory to look in</param>
+    /// <param name="takeMaxCharges">use max charges instead of current</param>
+    /// <returns></returns>
+    internal static IEnumerable<PearlOfPower> CollectPearls(ItemsCollection inventory, bool takeMaxCharges)
+    {
+        var pearls = inventory
+            .Where(x => x.Blueprint is BlueprintItemEquipmentUsable usable
+            && usable.Type == UsableItemType.Other
+            && usable.SpendCharges
+            && usable.RestoreChargesOnRest
+            && usable.Charges <= 2
+            && usable.m_Ability != null
+            && usable.Ability.GetComponent<AbilityRestoreSpellSlot>() != null
+            );
+        var collected = pearls
+            .Select(x =>
+            {
+                var bp = x.Blueprint as BlueprintItemEquipmentUsable;
+                var restoreSpell = bp.Ability.GetComponent<AbilityRestoreSpellSlot>();
+                var charges = x.Count * (takeMaxCharges ? bp.Charges : x.Charges);
+                return new PearlOfPower(x, restoreSpell.SpellLevel, charges);
+            }
+            );
+        return collected;
+    }
+
+    /// <summary>
+    /// Aggregates pearls charges into array, where index is spell level and
+    /// value is amount of charges for that level
+    /// </summary>
+    /// <param name="pearls"></param>
+    /// <param name="allowLowerSlots"></param>
+    /// <returns></returns>
+    internal static int[] PearlTotal(IEnumerable<PearlOfPower> pearls, bool allowLowerSlots = true)
+    {
+        var arr = pearls.Aggregate(new int[10], (acc, item) =>
+        {
+            acc[item.MaxSpellLevel] += item.Charges;
+            return acc;
+        });
+        if (allowLowerSlots)
+        {
+            for (var i = arr.Length - 2; i >= 1; i--)
+            {
+                arr[i] += arr[i + 1];
+            }
+        }
+        return arr;
+    }
+
+    /// <summary>
+    /// Spends resource of one of the pearls in inventory
+    /// </summary>
+    /// <param name="unit">unit</param>
+    /// <param name="level">spell level</param>
+    /// <param name="exactLevel">Only use pearls of exact level or pearls of higher level too</param>
+    /// <param name="pearls">collection of pearls user has</param>
+    /// <returns></returns>
+    internal static bool TrySpendPearlResource(UnitEntityData unit, int level, bool exactLevel, out IEnumerable<PearlOfPower> pearls)
+    {
+        var inventory = unit.Inventory;
+        pearls = CollectPearls(inventory, false).ToList();
+        var pearl = pearls
+            .Where(x => x.Charges > 0 && (exactLevel ? x.MaxSpellLevel == level : x.MaxSpellLevel >= level))
+            .OrderBy(x => x.MaxSpellLevel)
+            .FirstOrDefault();
+        if (pearl != default)
+        {
+            // if count > 1 that means it's a stack of pearls.
+            // Trying to spend on it, will affect all pearls in it
+            // So we split one pearl from the stack and spend charge from it
+            if (pearl.ItemEntity.Count > 1)
+            {
+                var newPearl = pearl.ItemEntity.Split(1);
+                newPearl.SpendCharges(unit);
+            }
+            else
+            {
+                pearl.ItemEntity.SpendCharges(unit);
+            }
+            pearl.Charges--;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Updates One Pearl resources based on pearls
+    /// </summary>
+    /// <param name="unit">unit</param>
+    /// <param name="resources">array of one pearl resources</param>
+    /// <param name="amounts">amounts to set</param>
+    /// <param name="restore">are we restoring or spending</param>
+    /// <param name="upToLevel">affect resources only up to certain spell level</param>
+    internal static void UpdateResources(
+        UnitEntityData unit,
+        BlueprintScriptableObjectReference[] resources,
+        int[] amounts,
+        bool restore,
+        int upToLevel = 9)
+    {
+        for (int i = 1; i <= upToLevel; i++)
+        {
+            var res = resources[i - 1].Get();
+            var resource = unit.Descriptor.Resources.GetResource(res);
+            var oldAmount = resource.Amount;
+            if (oldAmount != amounts[i])
+            {
+                if (restore)
+                {
+                    resource.Amount = amounts[i];
+                    EventBus.RaiseEvent(delegate (IUnitAbilityResourceHandler h)
+                    {
+                        h.HandleAbilityResourceChange(unit, resource, oldAmount);
+                    });
+                }
+                else if (oldAmount - amounts[i] > 0)
+                {
+                    unit.Descriptor.Resources.Spend(res, oldAmount - amounts[i]);
+                }
+            }
+        }
+    }
+
+    public class PearlOfPower(ItemEntity itemEntity, int maxSpellLevel, int charges)
+    {
+        public int Charges = charges;
+        public ItemEntity ItemEntity = itemEntity;
+        public int MaxSpellLevel = maxSpellLevel;
+    };
+}
