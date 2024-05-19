@@ -138,7 +138,7 @@ internal static class BlueprintCreator
         {
             bp.m_Icon = exquisitePearlIcon;
             bp.m_DisplayName = Utils.CreateLocalizedString($"{bp.name}Name", $"One Pearl - Update resources");
-            bp.m_Description = Utils.CreateLocalizedString($"{bp.name}Description", $"Activate One Pearl to match it's resources to pearls in inventory");
+            bp.m_Description = Utils.CreateLocalizedString($"{bp.name}Description", $"Activate One Pearl to match its resources to pearls in inventory");
             bp.LocalizedSavingThrow = nullString;
             bp.LocalizedDuration = nullString;
             bp.AddComponent<AbilityEffectRunAction>(c =>
@@ -180,6 +180,10 @@ internal static class BlueprintCreator
             bp.m_Enchantments = [
                 ench.ToReference<BlueprintEquipmentEnchantmentReference>()
             ];
+            bp.m_BeltItemPrefab = normalPearls[0].m_BeltItemPrefab;
+            bp.m_ShardItem = normalPearls[0].m_ShardItem;
+            bp.m_EquipmentEntity = normalPearls[0].m_EquipmentEntity;
+            bp.m_EquipmentEntityAlternatives = [];
         });
     }
 }
