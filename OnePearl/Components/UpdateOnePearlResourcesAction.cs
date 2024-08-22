@@ -12,7 +12,7 @@ public class UpdateOnePearlResourcesAction : ContextAction
 {
     public BlueprintScriptableObjectReference[] TrackedResources;
 
-    public bool RaiseEvent;
+    public bool MergePearls;
 
     public bool TakeMaxCharges;
     public override string GetCaption()
@@ -23,7 +23,8 @@ public class UpdateOnePearlResourcesAction : ContextAction
     public override void RunAction()
     {
         var unit = Target.Unit;
-        var totals = PearlUtils.PearlTotal(PearlUtils.CollectPearls(unit.Inventory, TakeMaxCharges), Main.Settings.AllowLowerLevels);
+        var pearls = PearlUtils.CollectPearls(unit.Inventory, TakeMaxCharges, MergePearls);
+        var totals = PearlUtils.PearlTotal(pearls, Main.Settings.AllowLowerLevels);
         PearlUtils.UpdateResources(unit, TrackedResources, totals, true);
     }
 }

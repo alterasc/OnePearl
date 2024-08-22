@@ -17,7 +17,6 @@ namespace OnePearl.Components;
 public class AddOnePearlFeatureEquipment :
     ItemEnchantmentComponentDelegate<ItemEntity, AddOnePearlFeatureEquipmentData>
 {
-    [SerializeField]
     public BlueprintFeatureReference m_Feature;
 
     public BlueprintScriptableObjectReference[] TrackedResources;
@@ -38,7 +37,7 @@ public class AddOnePearlFeatureEquipment :
         this.Data.AppliedFact?.SetSourceItem(this.Owner);
         if (wielder2 != null && entityFact != null)
         {
-            var totals = PearlUtils.PearlTotal(PearlUtils.CollectPearls(wielder2.Inventory, false), Main.Settings.AllowLowerLevels);
+            var totals = PearlUtils.PearlTotal(PearlUtils.CollectPearls(wielder2.Inventory, false, false), Main.Settings.AllowLowerLevels);
             PearlUtils.UpdateResources(wielder2, TrackedResources, totals, true);
         }
     }

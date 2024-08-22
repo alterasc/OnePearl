@@ -16,10 +16,11 @@ internal static class PearlUtils
     /// <param name="inventory">inventory to look in</param>
     /// <param name="takeMaxCharges">use max charges instead of current</param>
     /// <returns></returns>
-    internal static IEnumerable<PearlOfPower> CollectPearls(ItemsCollection inventory, bool takeMaxCharges)
+    internal static IEnumerable<PearlOfPower> CollectPearls(ItemsCollection inventory, bool takeMaxCharges, bool merge)
     {
         var pearls = inventory
             .Where(x => x.Blueprint is BlueprintItemEquipmentUsable usable
+            && !x.IsDisposed
             && usable.Type == UsableItemType.Other
             && usable.SpendCharges
             && usable.RestoreChargesOnRest
@@ -27,6 +28,27 @@ internal static class PearlUtils
             && usable.m_Ability != null
             && usable.Ability.GetComponent<AbilityRestoreSpellSlot>() != null
             );
+        if (merge)
+        {
+            pearls = pearls.ToList();
+            foreach (var item in pearls)
+            {
+                if (!item.IsDisposed)
+                {
+                    item.TryMergeInCollection();
+                }
+            }
+            pearls = inventory
+                .Where(x => x.Blueprint is BlueprintItemEquipmentUsable usable
+                && !x.IsDisposed
+                && usable.Type == UsableItemType.Other
+                && usable.SpendCharges
+                && usable.RestoreChargesOnRest
+                && usable.Charges <= 2
+                && usable.m_Ability != null
+                && usable.Ability.GetComponent<AbilityRestoreSpellSlot>() != null
+                );
+        }
         var collected = pearls
             .Select(x =>
             {
@@ -74,7 +96,7 @@ internal static class PearlUtils
     internal static bool TrySpendPearlResource(UnitEntityData unit, int level, bool exactLevel, out IEnumerable<PearlOfPower> pearls)
     {
         var inventory = unit.Inventory;
-        pearls = CollectPearls(inventory, false).ToList();
+        pearls = CollectPearls(inventory, false, false).ToList();
         var pearl = pearls
             .Where(x => x.Charges > 0 && (exactLevel ? x.MaxSpellLevel == level : x.MaxSpellLevel >= level))
             .OrderBy(x => x.MaxSpellLevel)
@@ -88,6 +110,7 @@ internal static class PearlUtils
             {
                 var newPearl = pearl.ItemEntity.Split(1);
                 newPearl.SpendCharges(unit);
+                newPearl.TryMergeInCollection();
             }
             else
             {

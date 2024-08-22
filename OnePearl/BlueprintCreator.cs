@@ -103,7 +103,7 @@ internal static class BlueprintCreator
                         new UpdateOnePearlResourcesAction
                         {
                             TrackedResources = resourceRefArray,
-                            RaiseEvent = false,
+                            MergePearls = true,
                             TakeMaxCharges = true
                         }
                     ]
