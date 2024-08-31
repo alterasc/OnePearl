@@ -15,6 +15,7 @@ using System.Linq;
 namespace OnePearl;
 internal static class BlueprintCreator
 {
+    public static BlueprintItem OnePearl;
     public static BlueprintAbilityResource[] PearlAbilityResources;
     public static HashSet<BlueprintGuid> PearlAbilityResourceRefs;
 
@@ -181,5 +182,7 @@ internal static class BlueprintCreator
             bp.m_EquipmentEntity = normalPearls[0].m_EquipmentEntity;
             bp.m_EquipmentEntityAlternatives = [];
         });
+
+        OnePearl = item;
     }
 }

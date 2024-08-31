@@ -173,6 +173,20 @@ internal static class PearlUtils
         }
     }
 
+    /// <summary>
+    /// Checks if unit has One Pearl equipped
+    /// </summary>
+    /// <param name="unit"></param>
+    /// <returns></returns>
+    public static bool HasOnePearlEquipped(UnitEntityData unit)
+    {
+        if (unit == null || unit.Body == null || unit.Body.QuickSlots == null)
+        {
+            return false;
+        }
+        return unit.Body.QuickSlots.Any(x => x.Item != null && x.Item.Blueprint.AssetGuid == BlueprintCreator.OnePearl.AssetGuid);
+    }
+
     public class PearlOfPower(ItemEntity itemEntity, int maxSpellLevel, int charges)
     {
         public int Charges = charges;

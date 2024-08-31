@@ -18,7 +18,7 @@ static class ContextRestoreResourceAfter
             return;
         }
         var unit = __instance.Target.Unit;
-        if (unit == null || unit.Inventory == null)
+        if (unit == null || unit.Inventory == null || !PearlUtils.HasOnePearlEquipped(unit))
         {
             return;
         }
