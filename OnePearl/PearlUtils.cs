@@ -16,7 +16,7 @@ internal static class PearlUtils
     /// <param name="inventory">inventory to look in</param>
     /// <param name="takeMaxCharges">use max charges instead of current</param>
     /// <returns></returns>
-    internal static IEnumerable<PearlOfPower> CollectPearls(ItemsCollection inventory, bool takeMaxCharges, bool merge)
+    public static IEnumerable<PearlOfPower> CollectPearls(ItemsCollection inventory, bool takeMaxCharges, bool merge)
     {
         var pearls = inventory
             .Where(x => x.Blueprint is BlueprintItemEquipmentUsable usable
@@ -126,35 +126,48 @@ internal static class PearlUtils
     /// Updates One Pearl resources based on pearls
     /// </summary>
     /// <param name="unit">unit</param>
-    /// <param name="resources">array of one pearl resources</param>
-    /// <param name="amounts">amounts to set</param>
+    /// <param name="pearls">pearls in posession</param>
     /// <param name="restore">are we restoring or spending</param>
     /// <param name="upToLevel">affect resources only up to certain spell level</param>
-    internal static void UpdateResources(
+    /// 
+    public static void UpdateResources(
         UnitEntityData unit,
-        BlueprintScriptableObjectReference[] resources,
+        IEnumerable<PearlOfPower> pearls,
+        bool restore,
+        int upToLevel = 9
+        )
+    {
+        var totals = PearlTotal(pearls, Main.Settings.AllowLowerLevels);
+        UpdateResources(unit, totals, restore, upToLevel);
+    }
+
+    private static void UpdateResources(
+        UnitEntityData unit,
         int[] amounts,
         bool restore,
         int upToLevel = 9)
     {
         for (int i = 1; i <= upToLevel; i++)
         {
-            var res = resources[i - 1].Get();
+            var res = BlueprintCreator.PearlAbilityResources[i - 1];
             var resource = unit.Descriptor.Resources.GetResource(res);
-            var oldAmount = resource.Amount;
-            if (oldAmount != amounts[i])
+            if (resource != null)
             {
-                if (restore)
+                var oldAmount = resource.Amount;
+                if (oldAmount != amounts[i])
                 {
-                    resource.Amount = amounts[i];
-                    EventBus.RaiseEvent(delegate (IUnitAbilityResourceHandler h)
+                    if (restore)
                     {
-                        h.HandleAbilityResourceChange(unit, resource, oldAmount);
-                    });
-                }
-                else if (oldAmount - amounts[i] > 0)
-                {
-                    unit.Descriptor.Resources.Spend(res, oldAmount - amounts[i]);
+                        resource.Amount = amounts[i];
+                        EventBus.RaiseEvent(delegate (IUnitAbilityResourceHandler h)
+                        {
+                            h.HandleAbilityResourceChange(unit, resource, oldAmount);
+                        });
+                    }
+                    else if (oldAmount - amounts[i] > 0)
+                    {
+                        unit.Descriptor.Resources.Spend(res, oldAmount - amounts[i]);
+                    }
                 }
             }
         }

@@ -1,5 +1,4 @@
-﻿using Kingmaker.Blueprints;
-using Kingmaker.Blueprints.JsonSystem;
+﻿using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.UnitLogic.Mechanics.Actions;
 
 namespace OnePearl.Components;
@@ -10,8 +9,6 @@ namespace OnePearl.Components;
 [TypeId("1c20490f6d86456a9c9a7c8275beb120")]
 public class UpdateOnePearlResourcesAction : ContextAction
 {
-    public BlueprintScriptableObjectReference[] TrackedResources;
-
     public bool MergePearls;
 
     public bool TakeMaxCharges;
@@ -24,7 +21,6 @@ public class UpdateOnePearlResourcesAction : ContextAction
     {
         var unit = Target.Unit;
         var pearls = PearlUtils.CollectPearls(unit.Inventory, TakeMaxCharges, MergePearls);
-        var totals = PearlUtils.PearlTotal(pearls, Main.Settings.AllowLowerLevels);
-        PearlUtils.UpdateResources(unit, TrackedResources, totals, true);
+        PearlUtils.UpdateResources(unit, pearls, true);
     }
 }

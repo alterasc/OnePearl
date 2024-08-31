@@ -3,7 +3,6 @@ using Kingmaker.Blueprints.Classes;
 using Kingmaker.Blueprints.Items;
 using Kingmaker.Blueprints.Items.Ecnchantments;
 using Kingmaker.Blueprints.Items.Equipment;
-using Kingmaker.Designers.Mechanics.EquipmentEnchants;
 using Kingmaker.Designers.Mechanics.Facts;
 using Kingmaker.Localization;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
@@ -16,6 +15,9 @@ using System.Linq;
 namespace OnePearl;
 internal static class BlueprintCreator
 {
+    public static BlueprintAbilityResource[] PearlAbilityResources;
+    public static HashSet<BlueprintGuid> PearlAbilityResourceRefs;
+
     internal static void CreateBlueprints()
     {
         var exquisitePearlIcon = Utils.GetBlueprint<BlueprintItem>("f682126f69da1ea479bf1ddf1d775d97").m_Icon;
@@ -45,7 +47,8 @@ internal static class BlueprintCreator
             });
             resources[i - 1] = resource;
         }
-        var resourceRefArray = resources.Select(x => x.ToReference<BlueprintScriptableObjectReference>()).ToArray();
+        PearlAbilityResources = resources;
+        PearlAbilityResourceRefs = resources.Select(x => x.AssetGuid).ToHashSet();
 
         var nullString = new LocalizedString();
 
@@ -66,7 +69,6 @@ internal static class BlueprintCreator
                 });
                 bp.AddComponent<AbilityRestoreFixedLevelSpellSlot>(c =>
                 {
-                    c.TrackedResources = resourceRefArray;
                     c.SpellLevel = i;
                 });
                 bp.ActionBarAutoFillIgnored = true;
@@ -102,17 +104,13 @@ internal static class BlueprintCreator
                     Actions = [
                         new UpdateOnePearlResourcesAction
                         {
-                            TrackedResources = resourceRefArray,
                             MergePearls = true,
                             TakeMaxCharges = true
                         }
                     ]
                 };
             });
-            bp.AddComponent<OnePearlResourceUpdateHandler>(c =>
-            {
-                c.TrackedResources = resourceRefArray;
-            });
+            bp.AddComponent<OnePearlResourceUpdateHandler>();
             bp.HideInUI = true;
             bp.HideInCharacterSheetAndLevelUp = true;
             bp.IsClassFeature = false;
@@ -130,7 +128,6 @@ internal static class BlueprintCreator
             bp.AddComponent<AddOnePearlFeatureEquipment>(c =>
             {
                 c.m_Feature = onePearlFeature.ToReference<BlueprintFeatureReference>();
-                c.TrackedResources = resourceRefArray;
             });
         });
 
@@ -148,7 +145,6 @@ internal static class BlueprintCreator
                     Actions = [
                         new UpdateOnePearlResourcesAction
                         {
-                            TrackedResources = resourceRefArray,
                             TakeMaxCharges = false
                         }
                     ]

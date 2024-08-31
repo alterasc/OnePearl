@@ -1,5 +1,4 @@
-﻿using Kingmaker.Blueprints;
-using Kingmaker.Blueprints.JsonSystem;
+﻿using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Components.Base;
@@ -11,7 +10,6 @@ namespace OnePearl.Components;
 public class AbilityRestoreFixedLevelSpellSlot : AbilityApplyEffect, IAbilityRequiredParameters, IAbilityRestriction
 {
     public int SpellLevel;
-    public BlueprintScriptableObjectReference[] TrackedResources;
     AbilityParameter IAbilityRequiredParameters.RequiredParameters => AbilityParameter.SpellSlot;
 
     public override void Apply(AbilityExecutionContext context, TargetWrapper target)
@@ -24,20 +22,17 @@ public class AbilityRestoreFixedLevelSpellSlot : AbilityApplyEffect, IAbilityReq
             return;
         }
 
-        var allowLowerSlots = Main.Settings.AllowLowerLevels;
-
         SpellSlot notAvailableSpellSlot = GetNotAvailableSpellSlot(context.Ability.ParamSpellSlot.SpellShell);
         if (notAvailableSpellSlot != null)
         {
-            var resourceSpent = PearlUtils.TrySpendPearlResource(context.MaybeOwner, SpellLevel, !allowLowerSlots, out var pearlTotals);
+            var resourceSpent = PearlUtils.TrySpendPearlResource(context.MaybeOwner, SpellLevel, !Main.Settings.AllowLowerLevels, out var pearlTotals);
             if (resourceSpent)
             {
                 notAvailableSpellSlot.Available = true;
             }
-            if (allowLowerSlots)
+            if (Main.Settings.AllowLowerLevels)
             {
-                var totals = PearlUtils.PearlTotal(pearlTotals, allowLowerSlots);
-                PearlUtils.UpdateResources(context.MaybeOwner, TrackedResources, totals, false, SpellLevel - 1);
+                PearlUtils.UpdateResources(context.MaybeOwner, pearlTotals, false, SpellLevel - 1);
             }
         }
     }

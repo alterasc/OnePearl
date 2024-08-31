@@ -1,13 +1,11 @@
 ﻿using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
-using Kingmaker.Blueprints.Facts;
 using Kingmaker.Blueprints.Items.Ecnchantments;
 using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.EntitySystem;
 using Kingmaker.Items;
 using Kingmaker.UnitLogic;
 using Newtonsoft.Json;
-using UnityEngine;
 
 namespace OnePearl.Components;
 
@@ -18,8 +16,6 @@ public class AddOnePearlFeatureEquipment :
     ItemEnchantmentComponentDelegate<ItemEntity, AddOnePearlFeatureEquipmentData>
 {
     public BlueprintFeatureReference m_Feature;
-
-    public BlueprintScriptableObjectReference[] TrackedResources;
 
     public BlueprintFeature Feature => this.m_Feature?.Get();
 
@@ -37,8 +33,8 @@ public class AddOnePearlFeatureEquipment :
         this.Data.AppliedFact?.SetSourceItem(this.Owner);
         if (wielder2 != null && entityFact != null)
         {
-            var totals = PearlUtils.PearlTotal(PearlUtils.CollectPearls(wielder2.Inventory, false, false), Main.Settings.AllowLowerLevels);
-            PearlUtils.UpdateResources(wielder2, TrackedResources, totals, true);
+            var pearls = PearlUtils.CollectPearls(wielder2.Inventory, false, false);
+            PearlUtils.UpdateResources(wielder2, pearls, true);
         }
     }
 
