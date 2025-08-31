@@ -2,7 +2,6 @@
 using Kingmaker.Blueprints;
 using Kingmaker.UnitLogic.Abilities;
 using OnePearl.Components;
-using System.Collections.Generic;
 
 namespace OnePearl.Patches;
 
@@ -16,32 +15,37 @@ internal static class AbilityConversionsAddCustomRestore
     [HarmonyPostfix]
     public static void Postfix(AbilityData __instance, ref IEnumerable<AbilityData> __result)
     {
-        if (__instance.SpellSlot == null || __instance.Spellbook == null)
+        var spellbook = __instance.Spellbook;
+        var spellLevel = __instance.SpellLevel;
+        if (spellbook == null || spellbook.Blueprint.IsAlchemist || !(spellLevel > 0))
         {
             return;
         }
-        List<AbilityData> tmpList = null;
+        List<AbilityData> tmpList = [];
+        var spellSlot = __instance.SpellSlot;
         foreach (var ability in __instance.Caster.Abilities)
         {
-            var spellLevel = __instance.SpellLevel;
+            
             var restoreComponent = ability.Blueprint.GetComponent<AbilityRestoreFixedLevelSpellSlot>();
             if (restoreComponent != null && restoreComponent.SpellLevel == spellLevel)
             {
                 AbilityData.AddAbilityUnique(ref tmpList, new AbilityData(ability)
                 {
-                    ParamSpellSlot = __instance.SpellSlot
+                    ParamSpellbook = spellbook,
+                    ParamSpellLevel = spellLevel,
+                    ParamSpellSlot = spellSlot
                 });
             }
         }
-        if (tmpList != null)
+        if (tmpList.Count > 0)
         {
-            if (__result is not List<AbilityData>)
+            if (__result is List<AbilityData> list)
             {
-                __result = tmpList;
+                list.AddRange(tmpList);
             }
             else
             {
-                (__result as List<AbilityData>).AddRange(tmpList);
+                __result = __result == null ? tmpList : Enumerable.Concat(__result, tmpList).ToList();
             }
         }
     }

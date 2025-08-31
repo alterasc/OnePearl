@@ -9,8 +9,6 @@ using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.Abilities.Components;
 using Kingmaker.UnitLogic.FactLogic;
 using OnePearl.Components;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace OnePearl;
 internal static class BlueprintCreator

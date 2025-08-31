@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Kingmaker.Blueprints.JsonSystem;
-using System;
 using System.Reflection;
 using UnityModManagerNet;
 
@@ -23,15 +22,9 @@ static class Main
 #if DEBUG
         modEntry.OnUnload = OnUnload;
 #endif
-        modEntry.OnGUI = OnGUI;
         HarmonyInstance = new Harmony(modEntry.Info.Id);
         HarmonyInstance.PatchAll(Assembly.GetExecutingAssembly());
         return true;
-    }
-
-    static void OnGUI(UnityModManager.ModEntry modEntry)
-    {
-
     }
 
 #if DEBUG

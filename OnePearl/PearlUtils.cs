@@ -4,8 +4,6 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UnitLogic.Abilities.Components;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace OnePearl;
 internal static class PearlUtils
@@ -115,6 +113,7 @@ internal static class PearlUtils
             else
             {
                 pearl.ItemEntity.SpendCharges(unit);
+                pearl.ItemEntity = pearl.ItemEntity.TryMergeInCollection();
             }
             pearl.Charges--;
             return true;
